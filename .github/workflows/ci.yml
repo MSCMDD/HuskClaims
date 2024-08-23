@@ -1,4 +1,5 @@
-name: CI Tests & Publish
+# Builds, tests the project with Gradle
+name: CI Tests
 
 on:
   push:
@@ -16,45 +17,28 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: 'Checkout for CI 🛎️'
-        uses: actions/checkout@v4
-      - name: 'Set up JDK 17 📦'
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: 'Build with Gradle 🏗️'
-        uses: gradle/gradle-build-action@v3
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: build test publish
         env:
-          SNAPSHOTS_MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          SNAPSHOTS_MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-      - name: 'Publish Test Report 📊'
-        uses: mikepenz/action-junit-report@v4
-        if: success() || failure() # Continue on failure
+            SNAPSHOTS_MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+            SNAPSHOTS_MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: success() || failure() # always run even if the previous step fails
         with:
           report_paths: '**/build/test-results/test/TEST-*.xml'
-      - name: 'Fetch Version Name 📝'
-        run: |
-          echo "::set-output name=VERSION_NAME::$(${{github.workspace}}/gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}')"
-        id: fetch-version
-      - name: Get Version
-        run: |
-          echo "version_name=${{steps.fetch-version.outputs.VERSION_NAME}}" >> $GITHUB_ENV
-      - name: 'Publish to William278.net 🚀'
-        uses: WiIIiam278/bones-publish-action@v1
+      - name: 编译输出
+        uses: actions/upload-artifact@v3
+        if: success() || failure() 
         with:
-          api-key: ${{ secrets.BONES_API_KEY }}
-          project: 'huskclaims'
-          channel: 'alpha'
-          version: ${{ env.version_name }}
-          changelog: ${{ github.event.head_commit.message }}
-          distro-names: |
-            paper
-          distro-groups: |
-            paper
-          distro-descriptions: |
-            Paper
-          files: |
-            target/HuskClaims-Paper-${{ env.version_name }}.jar
+          name: plugins
+          path: target
+          if-no-files-found: error
