@@ -92,6 +92,7 @@ public interface CommandProvider {
 
         // Register built-in commands
         commands.add(new HuskClaimsCommand(getPlugin()));
+        commands.add(new ClaimFlagsCommand(getPlugin()));
         commands.add(new TrustListCommand(getPlugin()));
         commands.add(new UnTrustCommand(getPlugin()));
         commands.add(new TransferClaimCommand(getPlugin()));
@@ -128,6 +129,10 @@ public interface CommandProvider {
         // Register claim banning
         if (getPlugin().getSettings().getClaims().getBans().isEnabled()) {
             commands.add(new ClaimBanCommand(getPlugin()));
+        }
+
+        if (getPlugin().getSettings().getClaims().getBans().isPrivateClaims()) {
+            commands.add(new ClaimPrivateCommand(getPlugin()));
         }
 
         // Register claim commands
